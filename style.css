@@ -31,12 +31,7 @@ body {
 
 .page {
     background: #ffffff;
-
     overflow: hidden;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .page img {
