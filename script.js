@@ -1,13 +1,71 @@
 const PAGE_WIDTH = 2481;
 const PAGE_HEIGHT = 3508;
-
 const PAGE_RATIO = PAGE_WIDTH / PAGE_HEIGHT;
 
 const book = document.getElementById("book");
+const pages = document.querySelectorAll(".page");
 
 
 // --------------------------------------------------
-// Calculate the maximum usable page size
+// Detect device mode
+// --------------------------------------------------
+
+function isMobileDevice() {
+    return window.innerWidth < 768;
+}
+
+
+// --------------------------------------------------
+// Apply page density according to device
+// --------------------------------------------------
+
+function setPageDensity() {
+
+    const mobile = isMobileDevice();
+
+    pages.forEach((page, index) => {
+
+        /*
+         * MOBILE
+         * -------
+         * All pages become soft.
+         *
+         * This prevents the hard-cover 3D geometry
+         * from producing the vertical jump seen
+         * during the portrait flip.
+         */
+        if (mobile) {
+
+            page.setAttribute("data-density", "soft");
+
+        }
+
+        /*
+         * DESKTOP / TABLET
+         * ----------------
+         * Only the first and last pages behave
+         * as physical covers.
+         */
+        else {
+
+            if (index === 0 || index === pages.length - 1) {
+                page.setAttribute("data-density", "hard");
+            } else {
+                page.setAttribute("data-density", "soft");
+            }
+
+        }
+
+    });
+}
+
+
+// Apply density BEFORE StPageFlip loads the pages
+setPageDensity();
+
+
+// --------------------------------------------------
+// Calculate page dimensions
 // --------------------------------------------------
 
 function calculatePageSize() {
@@ -15,20 +73,51 @@ function calculatePageSize() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    // Keep a small breathing space around the newsletter
     const availableWidth = vw * 0.95;
     const availableHeight = vh * 0.95;
 
-    let pageWidth = availableWidth / 2;
-    let pageHeight = pageWidth / PAGE_RATIO;
+    const mobile = vw < 768;
 
-    // If the calculated height is too large,
-    // reduce the page width to fit the screen.
-    if (pageHeight > availableHeight) {
+    let pageWidth;
+    let pageHeight;
 
-        pageHeight = availableHeight;
-        pageWidth = pageHeight * PAGE_RATIO;
+
+    if (mobile) {
+
+        // ------------------------------------------
+        // MOBILE = ONE PAGE
+        // ------------------------------------------
+
+        pageWidth = availableWidth;
+
+        pageHeight = pageWidth / PAGE_RATIO;
+
+        if (pageHeight > availableHeight) {
+
+            pageHeight = availableHeight;
+            pageWidth = pageHeight * PAGE_RATIO;
+
+        }
+
+    } else {
+
+        // ------------------------------------------
+        // TABLET / DESKTOP = TWO PAGE SPREAD
+        // ------------------------------------------
+
+        pageWidth = availableWidth / 2;
+
+        pageHeight = pageWidth / PAGE_RATIO;
+
+        if (pageHeight > availableHeight) {
+
+            pageHeight = availableHeight;
+            pageWidth = pageHeight * PAGE_RATIO;
+
+        }
+
     }
+
 
     return {
         width: Math.floor(pageWidth),
@@ -41,90 +130,55 @@ const size = calculatePageSize();
 
 
 // --------------------------------------------------
-// Initialize StPageFlip
+// Create flipbook
 // --------------------------------------------------
 
 const pageFlip = new St.PageFlip(
     book,
     {
-        // Base page dimensions
+
         width: size.width,
         height: size.height,
 
-        // Let StPageFlip calculate the actual size
-        // from the available book/container space.
         size: "stretch",
 
-        // These values control when stretch mode
-        // changes into portrait mode.
+        autoSize: false,
+
+        /*
+         * StPageFlip switches to portrait when
+         * the available width becomes too narrow.
+         */
+        usePortrait: true,
+
         minWidth: 360,
         maxWidth: 2000,
 
         minHeight: 500,
         maxHeight: 3000,
 
-        // IMPORTANT:
-        // true = desktop/tablet landscape spread
-        //      whenever there is enough room
-        // true = portrait mode when space becomes too narrow
-        usePortrait: true,
-
-        // Prevent the library from resizing the parent
-        // element itself.
-        autoSize: false,
-
-        // We want the first/last page to behave as covers
-        // because they are explicitly marked "hard".
+        /*
+         * Keep this false because we want the
+         * desktop/tablet newsletter to remain
+         * a normal two-page spread.
+         */
         showCover: false,
 
-        // Slightly softer animation
         flippingTime: 750,
 
-        // Keep the physical page shadow subtle
-        maxShadowOpacity: 0.4,
-
         drawShadow: true,
+        maxShadowOpacity: 0.4,
 
         mobileScrollSupport: true,
 
-        // Keep mouse/touch interaction enabled
         useMouseEvents: true,
 
-        // Clicking the page can trigger the flip
         disableFlipByClick: false
     }
 );
 
 
 // --------------------------------------------------
-// Load newsletter pages
+// Load pages
 // --------------------------------------------------
 
-pageFlip.loadFromHTML(
-    document.querySelectorAll(".page")
-);
-
-
-// --------------------------------------------------
-// Optional: keep the flipbook responsive
-// --------------------------------------------------
-
-let resizeTimer;
-
-window.addEventListener("resize", () => {
-
-    clearTimeout(resizeTimer);
-
-    resizeTimer = setTimeout(() => {
-
-        // StPageFlip recalculates its bounds internally
-        // when the parent dimensions change.
-        //
-        // Calling update() forces the renderer to
-        // recalculate the orientation and dimensions.
-        if (pageFlip && pageFlip.getBoundsRect) {
-            pageFlip.update();
-        }
-
-    }, 150);
-});
+pageFlip.loadFromHTML(pages);
