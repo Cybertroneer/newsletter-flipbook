@@ -79,3 +79,150 @@ body {
     /* Let StPageFlip receive mouse/touch input */
     pointer-events: none;
 }
+
+/* =========================================================
+   PAGE NAVIGATION ARROWS
+   ========================================================= */
+
+.page-arrow {
+    position: fixed;
+
+    width: 54px;
+    height: 54px;
+
+    padding: 0;
+    margin: 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    z-index: 1000;
+
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+
+/* ---------------------------------------------------------
+   ARROW POSITION
+   --------------------------------------------------------- */
+
+.next-arrow {
+    right: 2.5vw;
+    top: 50%;
+
+    transform: translateY(-50%);
+}
+
+.prev-arrow {
+    left: 2.5vw;
+    top: 50%;
+
+    transform: translateY(-50%);
+}
+
+
+/* ---------------------------------------------------------
+   SVG ARROW
+   --------------------------------------------------------- */
+
+.page-arrow svg {
+    width: 34px;
+    height: 34px;
+
+    display: block;
+
+    overflow: visible;
+
+    transition:
+        transform 220ms ease,
+        opacity 220ms ease;
+}
+
+
+.page-arrow svg path {
+    fill: none;
+
+    stroke: #ffffff;
+
+    stroke-width: 2.5;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* ---------------------------------------------------------
+   TRANSLUCENT CIRCLE
+   --------------------------------------------------------- */
+
+.page-arrow::before {
+    content: "";
+
+    position: absolute;
+
+    width: 54px;
+    height: 54px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.20);
+
+    opacity: 0;
+
+    transform: scale(0.75);
+
+    transition:
+        opacity 220ms ease,
+        transform 220ms ease;
+
+    z-index: -1;
+}
+
+
+/* ---------------------------------------------------------
+   HOVER
+   --------------------------------------------------------- */
+
+.page-arrow:hover::before {
+    opacity: 1;
+
+    transform: scale(1);
+}
+
+
+.page-arrow:hover svg {
+    transform: scale(0.78);
+}
+
+
+/* ---------------------------------------------------------
+   ACTIVE / CLICK
+   --------------------------------------------------------- */
+
+.page-arrow:active svg {
+    transform: scale(0.70);
+}
+
+
+/* ---------------------------------------------------------
+   REMOVE DEFAULT BUTTON FOCUS APPEARANCE
+   --------------------------------------------------------- */
+
+.page-arrow:focus {
+    outline: none;
+}
+
+
+.page-arrow:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 4px;
+}
