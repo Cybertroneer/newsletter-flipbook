@@ -1,27 +1,86 @@
-<div id="book">
+<!DOCTYPE html>
+<html lang="en">
 
-    <div class="page" data-density="hard">
-        <img src="pages/page1.png">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Newsletter Flipbook</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body>
+
+    <div id="book">
+
+        <!-- PAGE 1 -->
+        <div class="page" data-density="hard">
+            <img
+                src="pages/page1.png"
+                alt="Newsletter Page 1"
+            >
+        </div>
+
+
+        <!-- PAGE 2 -->
+        <div class="page">
+            <img
+                src="pages/page2.png"
+                alt="Newsletter Page 2"
+            >
+        </div>
+
+
+        <!-- PAGE 3 -->
+        <div class="page">
+            <img
+                src="pages/page3.png"
+                alt="Newsletter Page 3"
+            >
+        </div>
+
+
+        <!-- PAGE 4 -->
+        <div class="page">
+            <img
+                src="pages/page4.png"
+                alt="Newsletter Page 4"
+            >
+        </div>
+
+
+        <!-- PAGE 5 -->
+        <div class="page">
+            <img
+                src="pages/page5.png"
+                alt="Newsletter Page 5"
+            >
+        </div>
+
+
+        <!-- PAGE 6 -->
+        <div class="page" data-density="hard">
+            <img
+                src="pages/page6.png"
+                alt="Newsletter Page 6"
+            >
+        </div>
+
     </div>
 
-    <div class="page">
-        <img src="pages/page2.png">
-    </div>
 
-    <div class="page">
-        <img src="pages/page3.png">
-    </div>
+    <!-- StPageFlip -->
+    <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
 
-    <div class="page">
-        <img src="pages/page4.png">
-    </div>
+    <!-- Our custom script -->
+    <script src="script.js"></script>
 
-    <div class="page">
-        <img src="pages/page5.png">
-    </div>
+</body>
 
-    <div class="page" data-density="hard">
-        <img src="pages/page6.png">
-    </div>
-
-</div>
+</html>
