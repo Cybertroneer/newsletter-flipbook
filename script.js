@@ -1,44 +1,65 @@
-// ==========================================
-// NEWSLETTER FLIPBOOK
-// ==========================================
-
-// Original page dimensions
 const PAGE_WIDTH = 2481;
 const PAGE_HEIGHT = 3508;
 
 const PAGE_RATIO = PAGE_WIDTH / PAGE_HEIGHT;
 
-
-// ==========================================
-// ELEMENTS
-// ==========================================
-
 const book = document.getElementById("book");
-
 const pages = document.querySelectorAll(".page");
 
 
 // ==========================================
-// DEVICE DETECTION
+// MOBILE DETECTION
 // ==========================================
 
-function isMobile() {
-    return window.innerWidth < 768;
-}
+const isMobile = window.innerWidth < 768;
 
 
 // ==========================================
-// CALCULATE PAGE SIZE
+// PAGE DENSITY
 // ==========================================
 
-function calculateBookSize() {
+pages.forEach((page, index) => {
 
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    if (isMobile) {
 
-    // Keep 95% of the viewport available
-    const availableWidth = viewportWidth * 0.95;
-    const availableHeight = viewportHeight * 0.95;
+        // Mobile = all soft pages
+        page.removeAttribute("data-density");
+
+    } else {
+
+        // Desktop / tablet
+        // First + last = hard covers
+
+        if (index === 0 || index === pages.length - 1) {
+
+            page.setAttribute(
+                "data-density",
+                "hard"
+            );
+
+        } else {
+
+            page.removeAttribute(
+                "data-density"
+            );
+        }
+    }
+});
+
+
+// ==========================================
+// CALCULATE DIMENSIONS
+// ==========================================
+
+function calculateSize() {
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const margin = 0.95;
+
+    const availableWidth = vw * margin;
+    const availableHeight = vh * margin;
 
     let pageWidth;
     let pageHeight;
@@ -48,51 +69,47 @@ function calculateBookSize() {
     // MOBILE
     // ========================================
 
-    if (isMobile()) {
-
-        // One portrait page
+    if (vw < 768) {
 
         pageWidth = availableWidth;
 
-        pageHeight = pageWidth / PAGE_RATIO;
+        pageHeight =
+            pageWidth / PAGE_RATIO;
 
-
-        // If page is too tall,
-        // scale it down to fit viewport
 
         if (pageHeight > availableHeight) {
 
             pageHeight = availableHeight;
 
-            pageWidth = pageHeight * PAGE_RATIO;
+            pageWidth =
+                pageHeight * PAGE_RATIO;
         }
 
     }
 
 
     // ========================================
-    // TABLET / DESKTOP
+    // DESKTOP / TABLET
     // ========================================
 
     else {
 
-        // Two portrait pages side by side
+        // Two pages side-by-side
 
-        pageWidth = availableWidth / 2;
+        pageWidth =
+            availableWidth / 2;
 
-        pageHeight = pageWidth / PAGE_RATIO;
+        pageHeight =
+            pageWidth / PAGE_RATIO;
 
-
-        // If the two-page spread is too tall,
-        // scale the spread down
 
         if (pageHeight > availableHeight) {
 
             pageHeight = availableHeight;
 
-            pageWidth = pageHeight * PAGE_RATIO;
+            pageWidth =
+                pageHeight * PAGE_RATIO;
         }
-
     }
 
 
@@ -103,151 +120,58 @@ function calculateBookSize() {
 }
 
 
-// ==========================================
-// PAGE DENSITY
-// ==========================================
-
-function setupPageDensity() {
-
-    pages.forEach((page, index) => {
-
-        if (isMobile()) {
-
-            // --------------------------------
-            // MOBILE
-            // --------------------------------
-            // Every page is soft.
-
-            page.removeAttribute("data-density");
-
-        } else {
-
-            // --------------------------------
-            // DESKTOP / TABLET
-            // --------------------------------
-            // First and last pages are hard.
-
-            if (
-                index === 0 ||
-                index === pages.length - 1
-            ) {
-
-                page.setAttribute(
-                    "data-density",
-                    "hard"
-                );
-
-            } else {
-
-                page.removeAttribute(
-                    "data-density"
-                );
-
-            }
-        }
-
-    });
-}
+const size = calculateSize();
 
 
 // ==========================================
-// SETUP
-// ==========================================
-
-setupPageDensity();
-
-
-// Calculate dimensions
-
-const size = calculateBookSize();
-
-
-// ==========================================
-// CREATE STPAGEFLIP
+// CREATE FLIPBOOK
 // ==========================================
 
 const pageFlip = new St.PageFlip(
     book,
     {
 
-        // ----------------------------------
-        // PAGE SIZE
-        // ----------------------------------
-
         width: size.width,
 
         height: size.height,
 
 
-        // ----------------------------------
-        // SIZE MODE
-        // ----------------------------------
-
-        size: "stretch",
+        // IMPORTANT:
+        // Do NOT stretch the book.
+        size: "fixed",
 
 
-        // ----------------------------------
-        // RESPONSIVE
-        // ----------------------------------
-
+        // Desktop/tablet = landscape spread
+        // Mobile = portrait
         usePortrait: true,
 
 
-        // ----------------------------------
-        // AUTO SIZE
-        // ----------------------------------
-
+        // Do not automatically resize
         autoSize: false,
 
 
-        // ----------------------------------
-        // COVER
-        // ----------------------------------
-
+        // We control covers ourselves
         showCover: false,
 
 
-        // ----------------------------------
-        // ANIMATION
-        // ----------------------------------
-
+        // Animation
         flippingTime: 750,
 
 
-        // ----------------------------------
-        // SHADOW
-        // ----------------------------------
-
+        // Shadow
         drawShadow: true,
 
         maxShadowOpacity: 0.5,
 
 
-        // ----------------------------------
-        // MOBILE
-        // ----------------------------------
-
-        mobileScrollSupport: true,
-
-
-        // ----------------------------------
-        // PAGE LIMITS
-        // ----------------------------------
-
-        minWidth: 360,
-
-        maxWidth: 2000,
-
-        minHeight: 500,
-
-        maxHeight: 3000
-
+        // Mobile touch
+        mobileScrollSupport: true
     }
 );
 
 
 // ==========================================
-// LOAD HTML PAGES
+// LOAD PAGES
 // ==========================================
 
 pageFlip.loadFromHTML(pages);
