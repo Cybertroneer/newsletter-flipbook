@@ -7,7 +7,7 @@ const pages = document.querySelectorAll(".page");
 
 
 // --------------------------------------------------
-// DEVICE DETECTION
+// DEVICE
 // --------------------------------------------------
 
 const isMobile = window.innerWidth < 768;
@@ -22,17 +22,16 @@ pages.forEach((page, index) => {
     if (isMobile) {
 
         // MOBILE
-        // All pages are soft.
-        // This gives the cover the same soft flip
-        // behavior in both forward and backward directions.
+        // Every page is soft.
+        // This gives the mobile newsletter a consistent
+        // flexible-page animation.
 
         page.removeAttribute("data-density");
 
     } else {
 
         // DESKTOP / TABLET
-        // Only the first and last pages behave as
-        // physical hard covers.
+        // First and last pages are physical covers.
 
         if (index === 0 || index === pages.length - 1) {
 
@@ -56,7 +55,6 @@ function calculatePageSize() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    // Keep 95% breathing space around the book
     const availableWidth = vw * 0.95;
     const availableHeight = vh * 0.95;
 
@@ -74,9 +72,6 @@ function calculatePageSize() {
         pageWidth = availableWidth;
         pageHeight = pageWidth / PAGE_RATIO;
 
-        // If the page is taller than the viewport,
-        // reduce it until it fits.
-
         if (pageHeight > availableHeight) {
 
             pageHeight = availableHeight;
@@ -93,9 +88,6 @@ function calculatePageSize() {
 
         pageWidth = availableWidth / 2;
         pageHeight = pageWidth / PAGE_RATIO;
-
-        // If the spread is too tall, scale both
-        // pages down to fit the viewport.
 
         if (pageHeight > availableHeight) {
 
@@ -117,7 +109,7 @@ const size = calculatePageSize();
 
 
 // --------------------------------------------------
-// INITIALIZE STPAGEFLIP
+// STPAGEFLIP
 // --------------------------------------------------
 
 const pageFlip = new St.PageFlip(
@@ -127,51 +119,36 @@ const pageFlip = new St.PageFlip(
         width: size.width,
         height: size.height,
 
-        // Let StPageFlip handle the responsive
-        // spread/portrait rendering.
         size: "stretch",
 
-        // These control the minimum/maximum
-        // dimensions of the rendered page.
         minWidth: 360,
         maxWidth: 2000,
 
         minHeight: 500,
         maxHeight: 3000,
 
-        // TRUE allows:
+        // Automatically switch between:
         //
-        // Desktop / tablet:
-        //      TWO PAGE SPREAD
-        //
-        // Mobile:
-        //      SINGLE PAGE
+        // Desktop / Tablet → two pages
+        // Mobile            → one page
         //
         usePortrait: true,
 
-        // Prevent StPageFlip from resizing
-        // the parent container.
         autoSize: false,
 
-        // IMPORTANT:
-        // Keep false because we are controlling
-        // hard/soft density ourselves.
+        // We control hard/soft pages ourselves.
         showCover: false,
 
-        // Animation duration in milliseconds.
+        // Flip animation speed.
         flippingTime: 750,
 
-        // Page shadow.
         drawShadow: true,
         maxShadowOpacity: 0.4,
 
-        // Touch support.
         mobileScrollSupport: true,
 
-        // Mouse click/drag support.
         useMouseEvents: true,
 
-        // Clicking the page can initiate a flip.
         disableFlipByClick: false
     }
 );
@@ -182,3 +159,79 @@ const pageFlip = new St.PageFlip(
 // --------------------------------------------------
 
 pageFlip.loadFromHTML(pages);
+
+
+// --------------------------------------------------
+// MOBILE BACKWARD-FLIP FIX
+// --------------------------------------------------
+
+/*
+ * StPageFlip 2.0.7 intentionally skips drawing the
+ * bottom page when:
+ *
+ *      orientation = PORTRAIT
+ *      direction  = BACK
+ *
+ * This causes the backward mobile animation to appear
+ * like a flat sheet instead of the soft fold.
+ *
+ * We override ONLY drawBottomPage().
+ *
+ * Desktop / tablet behavior remains untouched.
+ */
+
+if (isMobile) {
+
+    const render = pageFlip.getRender();
+
+    // Save the original renderer method.
+    const originalDrawBottomPage =
+        render.drawBottomPage.bind(render);
+
+
+    render.drawBottomPage = function () {
+
+        // If there is no bottom page, do nothing.
+        if (this.bottomPage === null) {
+            return;
+        }
+
+
+        /*
+         * Get the density of the page currently
+         * being flipped.
+         *
+         * On mobile this will be SOFT.
+         */
+        const tempDensity =
+            this.flippingPage != null
+                ? this.flippingPage.getDrawingDensity()
+                : null;
+
+
+        /*
+         * Put the bottom page behind the flipping page.
+         *
+         * StPageFlip normally does this itself, but
+         * skips the entire operation during a portrait
+         * BACK flip.
+         */
+        this.bottomPage
+            .getElement()
+            .style.zIndex = (
+                this.getSettings().startZIndex + 3
+            ).toString(10);
+
+
+        /*
+         * Draw the underlying page.
+         *
+         * THIS is the important fix.
+         *
+         * The previous page is now present underneath
+         * the soft flipping page, allowing StPageFlip's
+         * normal fold geometry to remain visible.
+         */
+        this.bottomPage.draw(tempDensity);
+    };
+}
