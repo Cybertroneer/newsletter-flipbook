@@ -1,65 +1,47 @@
+// ==========================================
+// NEWSLETTER FLIPBOOK
+// ==========================================
+
+// Original page dimensions
 const PAGE_WIDTH = 2481;
 const PAGE_HEIGHT = 3508;
 
 const PAGE_RATIO = PAGE_WIDTH / PAGE_HEIGHT;
 
+
+// ==========================================
+// ELEMENTS
+// ==========================================
+
 const book = document.getElementById("book");
+
 const pages = document.querySelectorAll(".page");
 
-
-// ==========================================
-// MOBILE DETECTION
-// ==========================================
-
-const isMobile = window.innerWidth < 768;
+const nextButton = document.getElementById("nextButton");
+const prevButton = document.getElementById("prevButton");
 
 
 // ==========================================
-// PAGE DENSITY
+// DEVICE DETECTION
 // ==========================================
 
-pages.forEach((page, index) => {
-
-    if (isMobile) {
-
-        // Mobile = all soft pages
-        page.removeAttribute("data-density");
-
-    } else {
-
-        // Desktop / tablet
-        // First + last = hard covers
-
-        if (index === 0 || index === pages.length - 1) {
-
-            page.setAttribute(
-                "data-density",
-                "hard"
-            );
-
-        } else {
-
-            page.removeAttribute(
-                "data-density"
-            );
-        }
-    }
-});
+function isMobile() {
+    return window.innerWidth < 768;
+}
 
 
 // ==========================================
-// CALCULATE DIMENSIONS
+// CALCULATE PAGE SIZE
 // ==========================================
 
-function calculateSize() {
+function calculateBookSize() {
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
 
-    const margin = 0.95;
-
-    const availableWidth = vw * margin;
-    const availableHeight = vh * margin;
+    // Keep 95% of the viewport available
+    const availableWidth = viewportWidth * 0.95;
+    const availableHeight = viewportHeight * 0.95;
 
     let pageWidth;
     let pageHeight;
@@ -69,47 +51,51 @@ function calculateSize() {
     // MOBILE
     // ========================================
 
-    if (vw < 768) {
+    if (isMobile()) {
+
+        // One portrait page
 
         pageWidth = availableWidth;
 
-        pageHeight =
-            pageWidth / PAGE_RATIO;
+        pageHeight = pageWidth / PAGE_RATIO;
 
+
+        // If page is too tall,
+        // scale it down to fit viewport
 
         if (pageHeight > availableHeight) {
 
             pageHeight = availableHeight;
 
-            pageWidth =
-                pageHeight * PAGE_RATIO;
+            pageWidth = pageHeight * PAGE_RATIO;
         }
 
     }
 
 
     // ========================================
-    // DESKTOP / TABLET
+    // TABLET / DESKTOP
     // ========================================
 
     else {
 
-        // Two pages side-by-side
+        // Two portrait pages side by side
 
-        pageWidth =
-            availableWidth / 2;
+        pageWidth = availableWidth / 2;
 
-        pageHeight =
-            pageWidth / PAGE_RATIO;
+        pageHeight = pageWidth / PAGE_RATIO;
 
+
+        // If the two-page spread is too tall,
+        // scale the spread down
 
         if (pageHeight > availableHeight) {
 
             pageHeight = availableHeight;
 
-            pageWidth =
-                pageHeight * PAGE_RATIO;
+            pageWidth = pageHeight * PAGE_RATIO;
         }
+
     }
 
 
@@ -120,58 +106,366 @@ function calculateSize() {
 }
 
 
-const size = calculateSize();
+// ==========================================
+// PAGE DENSITY
+// ==========================================
+
+function setupPageDensity() {
+
+    pages.forEach((page, index) => {
+
+        if (isMobile()) {
+
+            // --------------------------------
+            // MOBILE
+            // --------------------------------
+            // Every page is soft.
+
+            page.removeAttribute("data-density");
+
+        } else {
+
+            // --------------------------------
+            // DESKTOP / TABLET
+            // --------------------------------
+            // First and last pages are hard.
+
+            if (
+                index === 0 ||
+                index === pages.length - 1
+            ) {
+
+                page.setAttribute(
+                    "data-density",
+                    "hard"
+                );
+
+            } else {
+
+                page.removeAttribute(
+                    "data-density"
+                );
+
+            }
+        }
+
+    });
+}
 
 
 // ==========================================
-// CREATE FLIPBOOK
+// SETUP
+// ==========================================
+
+setupPageDensity();
+
+
+// Calculate dimensions
+
+const size = calculateBookSize();
+
+
+// ==========================================
+// CREATE STPAGEFLIP
 // ==========================================
 
 const pageFlip = new St.PageFlip(
     book,
     {
 
+        // ----------------------------------
+        // PAGE SIZE
+        // ----------------------------------
+
         width: size.width,
 
         height: size.height,
 
 
-        // IMPORTANT:
-        // Do NOT stretch the book.
-        size: "fixed",
+        // ----------------------------------
+        // SIZE MODE
+        // ----------------------------------
+
+        size: "stretch",
 
 
-        // Desktop/tablet = landscape spread
-        // Mobile = portrait
+        // ----------------------------------
+        // RESPONSIVE
+        // ----------------------------------
+
         usePortrait: true,
 
 
-        // Do not automatically resize
+        // ----------------------------------
+        // AUTO SIZE
+        // ----------------------------------
+
         autoSize: false,
 
 
-        // We control covers ourselves
+        // ----------------------------------
+        // COVER
+        // ----------------------------------
+
         showCover: false,
 
 
-        // Animation
+        // ----------------------------------
+        // ANIMATION
+        // ----------------------------------
+
         flippingTime: 750,
 
 
-        // Shadow
+        // ----------------------------------
+        // SHADOW
+        // ----------------------------------
+
         drawShadow: true,
 
         maxShadowOpacity: 0.5,
 
 
-        // Mobile touch
-        mobileScrollSupport: true
+        // ----------------------------------
+        // MOBILE
+        // ----------------------------------
+
+        mobileScrollSupport: true,
+
+
+        // ----------------------------------
+        // PAGE LIMITS
+        // ----------------------------------
+
+        minWidth: 360,
+
+        maxWidth: 2000,
+
+        minHeight: 500,
+
+        maxHeight: 3000
+
     }
 );
 
 
 // ==========================================
-// LOAD PAGES
+// ARROW VISIBILITY
+// ==========================================
+
+function updateNavigation() {
+
+    const currentIndex = pageFlip.getCurrentPageIndex();
+
+    const lastIndex = pages.length - 1;
+
+
+    // ======================================
+    // MOBILE
+    // ======================================
+
+    if (isMobile()) {
+
+        // ----------------------------------
+        // FIRST PAGE
+        // ----------------------------------
+
+        if (currentIndex === 0) {
+
+            prevButton.style.display = "none";
+
+            nextButton.style.display = "flex";
+
+        }
+
+
+        // ----------------------------------
+        // LAST PAGE
+        // ----------------------------------
+
+        else if (currentIndex >= lastIndex) {
+
+            prevButton.style.display = "flex";
+
+            nextButton.style.display = "none";
+
+        }
+
+
+        // ----------------------------------
+        // MIDDLE PAGES
+        // ----------------------------------
+
+        else {
+
+            prevButton.style.display = "flex";
+
+            nextButton.style.display = "flex";
+
+        }
+
+    }
+
+
+    // ======================================
+    // TABLET / DESKTOP
+    // ======================================
+
+    else {
+
+        // ----------------------------------
+        // FIRST SPREAD
+        // PAGE 01 | PAGE 02
+        // ----------------------------------
+
+        if (currentIndex === 0) {
+
+            prevButton.style.display = "none";
+
+            nextButton.style.display = "flex";
+
+        }
+
+
+        // ----------------------------------
+        // LAST SPREAD
+        // PAGE 05 | PAGE 06
+        // ----------------------------------
+
+        else if (currentIndex >= lastIndex - 1) {
+
+            prevButton.style.display = "flex";
+
+            nextButton.style.display = "none";
+
+        }
+
+
+        // ----------------------------------
+        // MIDDLE SPREAD
+        // PAGE 03 | PAGE 04
+        // ----------------------------------
+
+        else {
+
+            prevButton.style.display = "flex";
+
+            nextButton.style.display = "flex";
+
+        }
+
+    }
+
+}
+
+
+// ==========================================
+// NEXT BUTTON
+// ==========================================
+
+nextButton.addEventListener("click", function () {
+
+    const currentIndex = pageFlip.getCurrentPageIndex();
+
+    const lastIndex = pages.length - 1;
+
+
+    // --------------------------------------
+    // MOBILE
+    // --------------------------------------
+
+    if (isMobile()) {
+
+        if (currentIndex < lastIndex) {
+
+            pageFlip.flipNext();
+
+        }
+
+    }
+
+
+    // --------------------------------------
+    // DESKTOP / TABLET
+    // --------------------------------------
+
+    else {
+
+        // On desktop, each flip advances
+        // to the next two-page spread.
+
+        if (currentIndex < lastIndex - 1) {
+
+            pageFlip.flipNext();
+
+        }
+
+    }
+
+});
+
+
+// ==========================================
+// PREVIOUS BUTTON
+// ==========================================
+
+prevButton.addEventListener("click", function () {
+
+    const currentIndex = pageFlip.getCurrentPageIndex();
+
+
+    // --------------------------------------
+    // MOBILE
+    // --------------------------------------
+
+    if (isMobile()) {
+
+        if (currentIndex > 0) {
+
+            pageFlip.flipPrev();
+
+        }
+
+    }
+
+
+    // --------------------------------------
+    // DESKTOP / TABLET
+    // --------------------------------------
+
+    else {
+
+        if (currentIndex > 0) {
+
+            pageFlip.flipPrev();
+
+        }
+
+    }
+
+});
+
+
+// ==========================================
+// UPDATE ARROWS AFTER PAGE FLIP
+// ==========================================
+
+pageFlip.on("flip", function () {
+
+    updateNavigation();
+
+});
+
+
+// ==========================================
+// LOAD HTML PAGES
 // ==========================================
 
 pageFlip.loadFromHTML(pages);
+
+
+// ==========================================
+// INITIAL ARROW STATE
+// ==========================================
+
+updateNavigation();
